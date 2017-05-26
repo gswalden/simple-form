@@ -14,7 +14,9 @@ app.post('/newsletter', (req, res, next) => {
   data.type = 'New Newsletter Subscription';
   console.log(data);
 
-  if (validate('newsleter', data).error) {
+  const review = validate('newsleter', data);
+  if (review.error) {
+    console.log(review.error);
     return res.sendStatus(400);
   }
 
@@ -36,7 +38,9 @@ app.post('/contact-us', (req, res, next) => {
   data.type = 'New Contact Us Form Submission';
   console.log(data);
 
-  if (validate('contact', data).error) {
+  const review = validate('contact', data);
+  if (review.error) {
+    console.log(review.error);
     return res.sendStatus(400);
   }
 
@@ -96,8 +100,8 @@ const contactSchema = Joi.object({
 function validate(type, data) {
   switch (type) {
     case 'newsletter':
-      return Joi.validate(data, newsletterSchema);
+      return Joi.validate(data, newsletterSchema, { allowUnknown: true });
     case 'contact':
-      return Joi.validate(data, contactSchema);
+      return Joi.validate(data, contactSchema, { allowUnknown: true });
   }
 }
