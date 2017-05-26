@@ -1,5 +1,6 @@
 'use strict';
 
+const got = require('got');
 const cors = require('cors');
 const app = require('express')();
 const bodyParser = require('body-parser');
@@ -24,7 +25,10 @@ app.post('/newsletter', (req, res, next) => {
 
   res.sendStatus(200);
 
-  // send to slack
+  slackMsg([
+    data.type,
+    `email: ${data.email}`
+  ].join('\n'));
 
   sendEmail({
     subject: data.type,
@@ -59,5 +63,14 @@ function sendEmail(msg) {
     to: process.env.TO_ADDRESS,
   }, msg)).catch(err => {
     console.error('Failed to send', msg, err);
+  })
+}
+
+function slackMsg(msg) {
+  return got.post(process.env.WEBHOOK_URL, {
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text: '```' + msg + '```' })
+  }).catch(err => {
+    console.error('Failed to Slack', msg, err);
   })
 }
