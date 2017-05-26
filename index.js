@@ -1,17 +1,10 @@
 'use strict';
 
 const got = require('got');
+const Joi = require('joi');
 const cors = require('cors');
 const app = require('express')();
 const bodyParser = require('body-parser');
-
-const transporter = require('nodemailer').createTransport({
-  service: 'Gmail',
-  auth: {
-    user: process.env.FROM_ADDRESS,
-    pass: process.env.GOOGLE_PASSWORD
-  }
-});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -21,7 +14,9 @@ app.post('/newsletter', (req, res, next) => {
   data.type = 'New Newsletter Subscription';
   console.log(data);
 
-  // validate
+  if (validate('newsleter', data).error) {
+    return res.sendStatus(400);
+  }
 
   res.sendStatus(200);
 
@@ -41,11 +36,17 @@ app.post('/contact-us', (req, res, next) => {
   data.type = 'New Contact Us Form Submission';
   console.log(data);
 
-  // validate
+  if (validate('contact', data).error) {
+    return res.sendStatus(400);
+  }
 
   res.sendStatus(200);
 
-  // send to slack
+  const msg = [data.type];
+  for (const field of ['first-name', 'last-name', 'company', 'email']) {
+    if (data[field]) msg.push(`${field}: ${data[field]}`);
+  }
+  slackMsg(msg.join('\n'));
 
   sendEmail({
     subject: data.type,
@@ -57,6 +58,13 @@ app.listen(process.env.PORT || 3000, function() {
   console.log('Simple form server listening on port %d', this.address().port);
 })
 
+const transporter = require('nodemailer').createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.FROM_ADDRESS,
+    pass: process.env.GOOGLE_PASSWORD
+  }
+});
 function sendEmail(msg) {
   return transporter.sendMail(Object.assign({
     from: process.env.FROM_ADDRESS,
@@ -73,4 +81,23 @@ function slackMsg(msg) {
   }).catch(err => {
     console.error('Failed to Slack', msg, err);
   })
+}
+
+
+const newsletterSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+const contactSchema = Joi.object({
+  email: Joi.string().email().required(),
+  'first-name': Joi.string(),
+  'last-name': Joi.string(),
+  company: Joi.string(),
+});
+function validate(type, data) {
+  switch (type) {
+    case 'newsletter':
+      return Joi.validate(data, newsletterSchema);
+    case 'contact':
+      return Joi.validate(data, contactSchema);
+  }
 }
