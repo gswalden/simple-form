@@ -14,7 +14,7 @@ app.post('/newsletter', (req, res, next) => {
   data.type = 'New Newsletter Subscription';
   console.log(data);
 
-  const review = validate('newsleter', data);
+  const review = validate('newsletter', data);
   if (review.error) {
     console.log(review.error);
     return res.sendStatus(400);
