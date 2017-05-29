@@ -47,14 +47,39 @@ app.post('/contact-us', (req, res, next) => {
   res.sendStatus(200);
 
   const msg = [data.type];
-  for (const field of ['first-name', 'last-name', 'company', 'email']) {
+  for (const field of ['first-name', 'last-name', 'company', 'email', 'interests']) {
     if (data[field]) msg.push(`${field}: ${data[field]}`);
   }
   slackMsg(msg.join('\n'));
 
   sendEmail({
     subject: data.type,
-    text: data.email
+    text: msg.join('\n')
+  })
+});
+
+app.post('/partner', (req, res, next) => {
+  const data = req.body;
+  data.type = 'New Fleet Partner Request';
+  console.log(data);
+
+  const review = validate('partner', data);
+  if (review.error) {
+    console.log(review.error);
+    return res.sendStatus(400);
+  }
+
+  res.sendStatus(200);
+
+  const msg = [data.type];
+  for (const field of ['name', 'email']) {
+    if (data[field]) msg.push(`${field}: ${data[field]}`);
+  }
+  slackMsg(msg.join('\n'));
+
+  sendEmail({
+    subject: data.type,
+    text: msg.join('\n')
   })
 });
 
@@ -91,6 +116,10 @@ function slackMsg(msg) {
 const newsletterSchema = Joi.object({
   email: Joi.string().email().required()
 });
+const partnerSchema = Joi.object({
+  email: Joi.string().email().required(),
+  name: Joi.string().email()
+});
 const contactSchema = Joi.object({
   email: Joi.string().email().required(),
   'first-name': Joi.string(),
@@ -103,5 +132,7 @@ function validate(type, data) {
       return Joi.validate(data, newsletterSchema, { allowUnknown: true });
     case 'contact':
       return Joi.validate(data, contactSchema, { allowUnknown: true });
+    case 'partner':
+      return Joi.validate(data, partnerSchema, { allowUnknown: true });
   }
 }
