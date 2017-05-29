@@ -118,7 +118,7 @@ const newsletterSchema = Joi.object({
 });
 const partnerSchema = Joi.object({
   email: Joi.string().email().required(),
-  name: Joi.string().email()
+  name: Joi.string()
 });
 const contactSchema = Joi.object({
   email: Joi.string().email().required(),
