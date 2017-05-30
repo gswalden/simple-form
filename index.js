@@ -6,9 +6,19 @@ const cors = require('cors');
 const app = require('express')();
 const bodyParser = require('body-parser');
 
+// any domain
 app.use(cors());
+// carmera domains
+// app.use(cors([
+//   /\bcarmera\.com{0,1}$/i,
+//   /\bcarmeraco\.github.io$/i,
+// ]));
+
 app.use(bodyParser.json());
 
+/**
+ * Routes
+ */
 app.post('/newsletter', (req, res, next) => {
   const data = req.body;
   data.type = 'New Newsletter Subscription';
@@ -83,10 +93,16 @@ app.post('/partner', (req, res, next) => {
   })
 });
 
+/**
+ * Launch
+ */
 app.listen(process.env.PORT || 3000, function() {
   console.log('Simple form server listening on port %d', this.address().port);
 })
 
+/**
+ * Email helpers
+ */
 const transporter = require('nodemailer').createTransport({
   service: 'Gmail',
   auth: {
@@ -103,6 +119,10 @@ function sendEmail(msg) {
   })
 }
 
+/**
+ * Slack helpers
+ * @param {string} msg
+ */
 function slackMsg(msg) {
   return got.post(process.env.WEBHOOK_URL, {
     headers: { 'content-type': 'application/json' },
@@ -112,7 +132,9 @@ function slackMsg(msg) {
   })
 }
 
-
+/**
+ * Validation helpers
+ */
 const newsletterSchema = Joi.object({
   email: Joi.string().email().required()
 });
