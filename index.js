@@ -93,6 +93,8 @@ app.post('/partner', (req, res, next) => {
   })
 });
 
+app.get('/', (req, res) => res.sendStatus(200));
+
 /**
  * Launch
  */
